@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+
+# Virtual Environment
+env/
+venv/
+.venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config & Keys
+.env
+config.py
+
+# Audio files
+*.wav
+csm_output.wav
+
+# Logs
+*.log
+
+# Model cache
+.cache/
+models/
+
+# Temporary
+*.tmp
+temp/
+
+# Build
+build/
+dist/
+*.egg-info/
