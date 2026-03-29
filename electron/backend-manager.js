@@ -57,8 +57,8 @@ class BackendManager {
       // In development, use the project root
       return path.join(__dirname, '..');
     } else {
-      // In production, use app.asar or resources path
-      return path.join(process.resourcesPath);
+      // In production, extraResources are unpacked next to app.asar
+      return process.resourcesPath;
     }
   }
 

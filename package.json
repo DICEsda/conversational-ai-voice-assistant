@@ -1,20 +1,55 @@
 {
   "name": "conversational-ai-voice-assistant",
   "version": "1.0.0",
-  "description": "Voice assistant with Whisper STT, LM Studio LLM, and Porcupine hotword detection",
+  "description": "Desktop voice assistant with Whisper STT, LM Studio LLM, and Porcupine hotword detection",
+  "main": "electron/main.js",
   "scripts": {
+    "dev:frontend": "cd figma_project && npm run dev",
+    "dev:backend": "python start_backend.py",
+    "dev:electron": "electron .",
+    "build:frontend": "cd figma_project && npm run build",
+    "build": "npm run build:frontend && electron-builder --win",
+    "start": "electron .",
     "lint:api": "spectral lint",
     "lint:api:watch": "spectral lint --watch"
   },
+  "build": {
+    "appId": "com.dice.voice-assistant",
+    "productName": "Voice Assistant",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "figma_project/dist/**/*"
+    ],
+    "extraResources": [
+      { "from": "backend", "to": "backend" },
+      { "from": "STT", "to": "STT" },
+      { "from": "TTS", "to": "TTS" },
+      { "from": "LMStudio_LLMClient", "to": "LMStudio_LLMClient" },
+      { "from": "assets", "to": "assets" },
+      { "from": "config.example.py", "to": "config.example.py" },
+      { "from": "start_backend.py", "to": "start_backend.py" },
+      { "from": "requirements.txt", "to": "requirements.txt" }
+    ],
+    "win": {
+      "target": ["nsis"],
+      "icon": "electron/tray-icon.png"
+    }
+  },
   "devDependencies": {
-    "@stoplight/spectral-cli": "^6.11.1"
+    "@stoplight/spectral-cli": "^6.11.1",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
   },
   "keywords": [
     "voice-assistant",
     "whisper",
     "llm",
     "speech-to-text",
-    "ai"
+    "ai",
+    "electron"
   ],
   "author": "",
   "license": "MIT"
