@@ -1,0 +1,21 @@
+{
+  "name": "conversational-ai-voice-assistant",
+  "version": "1.0.0",
+  "description": "Voice assistant with Whisper STT, LM Studio LLM, and Porcupine hotword detection",
+  "scripts": {
+    "lint:api": "spectral lint",
+    "lint:api:watch": "spectral lint --watch"
+  },
+  "devDependencies": {
+    "@stoplight/spectral-cli": "^6.11.1"
+  },
+  "keywords": [
+    "voice-assistant",
+    "whisper",
+    "llm",
+    "speech-to-text",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT"
+}

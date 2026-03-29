@@ -1,0 +1,25 @@
+extends: ["spectral:oas", "spectral:asyncapi"]
+
+rules:
+  # OpenAPI specific rules
+  operation-description: warn
+  operation-operationId: warn
+  operation-summary: warn
+  operation-tags: warn
+  path-params: error
+  
+  # Info section rules
+  info-contact: warn
+  info-description: warn
+  info-license: warn
+  
+  # Tag rules
+  openapi-tags: warn
+  tag-description: warn
+  
+  # Model rules
+  oas3-schema: true
+  
+  # Security rules
+  oas3-api-servers: warn
+  oas3-valid-schema-example: warn
