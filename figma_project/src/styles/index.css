@@ -1,0 +1,23 @@
+@import './tailwind.css';
+@import './theme.css';
+
+/* Electron transparent window support */
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  -webkit-app-region: drag; /* Make the whole body draggable */
+}
+
+/* Make interactive elements not draggable */
+button, a, input, textarea, select {
+  -webkit-app-region: no-drag;
+}
+
+/* Ensure rounded corners are visible and properly clipped */
+#root {
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
