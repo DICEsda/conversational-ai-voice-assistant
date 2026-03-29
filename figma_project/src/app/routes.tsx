@@ -1,10 +1,10 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createHashRouter } from "react-router-dom";
 import Layout from "./components/Layout";
 import SplashScreen from "./components/SplashScreen";
 import GraphsPage from "./components/GraphsPage";
 import SettingsPage from "./components/SettingsPage";
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: "/",
     element: <Layout />,

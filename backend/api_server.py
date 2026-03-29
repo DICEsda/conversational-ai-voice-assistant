@@ -1,4 +1,5 @@
 """FastAPI server for Voice Assistant GUI"""
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Set
@@ -14,11 +15,49 @@ from backend.metrics_collector import MetricsCollector
 from backend.voice_assistant_service import VoiceAssistantService
 import config
 
+# Global instances
+metrics_collector: MetricsCollector = None
+voice_assistant: VoiceAssistantService = None
+websocket_clients: Set[WebSocket] = set()
+main_event_loop = None  # Store main event loop for thread-safe broadcasting
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup and shutdown lifecycle"""
+    global metrics_collector, voice_assistant, main_event_loop
+
+    # Startup
+    main_event_loop = asyncio.get_running_loop()
+
+    metrics_collector = MetricsCollector(history_seconds=60, collection_interval=0.5)
+    metrics_collector.start()
+
+    voice_assistant = VoiceAssistantService(
+        metrics_collector=metrics_collector,
+        event_callback=broadcast_event
+    )
+
+    print("✅ Backend started successfully")
+    print(f"📡 API: http://{config.API_HOST}:{config.API_PORT}")
+    print(f"🔌 WebSocket: ws://{config.API_HOST}:{config.API_PORT}/api/events")
+
+    yield
+
+    # Shutdown
+    if voice_assistant:
+        voice_assistant.stop()
+    if metrics_collector:
+        metrics_collector.stop()
+    print("👋 Backend stopped")
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Voice Assistant API",
     description="Backend API for Voice Assistant GUI",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 # CORS middleware - allow Electron app and Vite dev server
@@ -35,13 +74,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Global instances
-metrics_collector: MetricsCollector = None
-voice_assistant: VoiceAssistantService = None
-websocket_clients: Set[WebSocket] = set()
-main_event_loop = None  # Store main event loop for thread-safe broadcasting
-
 
 async def broadcast_event_async(event_type: EventType, data: dict):
     """Broadcast event to all connected WebSocket clients (async version)"""
@@ -76,43 +108,6 @@ def broadcast_event(event_type: EventType, data: dict):
         broadcast_event_async(event_type, data),
         main_event_loop
     )
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize components on startup"""
-    global metrics_collector, voice_assistant, main_event_loop
-    
-    # Capture the main event loop for thread-safe broadcasting
-    main_event_loop = asyncio.get_running_loop()
-    
-    # Start metrics collector
-    metrics_collector = MetricsCollector(history_seconds=60, collection_interval=0.5)
-    metrics_collector.start()
-    
-    # Initialize voice assistant service (but don't start it yet)
-    voice_assistant = VoiceAssistantService(
-        metrics_collector=metrics_collector,
-        event_callback=broadcast_event
-    )
-    
-    print("✅ Backend started successfully")
-    print(f"📡 API: http://{config.API_HOST}:{config.API_PORT}")
-    print(f"🔌 WebSocket: ws://{config.API_HOST}:{config.API_PORT}/api/events")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown"""
-    global metrics_collector, voice_assistant
-    
-    if voice_assistant:
-        voice_assistant.stop()
-    
-    if metrics_collector:
-        metrics_collector.stop()
-    
-    print("👋 Backend stopped")
 
 
 # ====================
