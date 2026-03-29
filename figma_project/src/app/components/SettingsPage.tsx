@@ -2,7 +2,7 @@ import { ArrowLeft, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-import type { Config } from '../../types/assistant';
+import type { Config, ModelsResponse } from '../../types/assistant';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -15,6 +15,10 @@ export default function SettingsPage() {
   const [vadMaxDuration, setVadMaxDuration] = useState(15);
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [ttsVoice, setTtsVoice] = useState('en-US-GuyNeural');
+  const [whisperSize, setWhisperSize] = useState('base');
+  const [llmModel, setLlmModel] = useState('');
+  const [llmModels, setLlmModels] = useState<string[]>([]);
+  const [whisperSizes, setWhisperSizes] = useState<string[]>(['tiny', 'base', 'small', 'medium', 'large-v2']);
   const [opacity, setOpacity] = useState(0);
   const [buttonsVisible, setButtonsVisible] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -41,8 +45,17 @@ export default function SettingsPage() {
       setVadMaxDuration(config.vad_max_duration);
       setTtsEnabled(config.tts_enabled);
       setTtsVoice(config.tts_voice);
+      setWhisperSize(config.whisper_model_size);
       setConnected(true);
       setLoading(false);
+
+      // Load available models
+      try {
+        const models: ModelsResponse = await api.getModels();
+        if (models.llm_models.length > 0) setLlmModels(models.llm_models);
+        setLlmModel(models.current_llm_model);
+        setWhisperSizes(models.whisper_sizes);
+      } catch { /* models endpoint optional */ }
     } catch (error) {
       console.error('Failed to load config:', error);
       setConnected(false);
@@ -65,6 +78,8 @@ export default function SettingsPage() {
         vad_max_duration: vadMaxDuration,
         tts_enabled: ttsEnabled,
         tts_voice: ttsVoice,
+        whisper_model_size: whisperSize,
+        ...(llmModel ? { model_name: llmModel } : {}),
       });
       
       setSaveMessage('Settings saved successfully!');
@@ -129,6 +144,38 @@ export default function SettingsPage() {
           </div>
         ) : (
           <>
+            {/* LLM Model Selection */}
+            {llmModels.length > 0 && (
+              <div className="mb-4">
+                <label className="text-xs text-gray-600 block mb-2">LLM Model</label>
+                <select
+                  value={llmModel}
+                  onChange={(e) => setLlmModel(e.target.value)}
+                  className="w-full text-xs bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-orange-400"
+                >
+                  {llmModels.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-gray-500 mt-1">Select model loaded in LM Studio.</p>
+              </div>
+            )}
+
+            {/* Whisper Model Size */}
+            <div className="mb-4">
+              <label className="text-xs text-gray-600 block mb-2">Whisper Model</label>
+              <select
+                value={whisperSize}
+                onChange={(e) => setWhisperSize(e.target.value)}
+                className="w-full text-xs bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-orange-400"
+              >
+                {whisperSizes.map((s) => (
+                  <option key={s} value={s}>{s}{s === 'tiny' ? ' (fastest)' : s === 'large-v2' ? ' (most accurate)' : ''}</option>
+                ))}
+              </select>
+              <p className="text-[10px] text-gray-500 mt-1">STT model size. Requires restart.</p>
+            </div>
+
             {/* Temperature */}
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">

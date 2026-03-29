@@ -18,6 +18,7 @@ HOTWORD_SOUND_PATH = os.path.join(BASE_DIR, "assets", "hotword_detected.mp3")
 SAMPLE_RATE = 16000
 RECORD_SECONDS = 5
 KEYWORD_NAME = "Hey Dice"
+WHISPER_MODEL_SIZE = "base"  # tiny, base, small, medium, large-v2
 
 # LLM Settings
 SYSTEM_PROMPT = "You are a helpful voice assistant. Keep responses brief and conversational."

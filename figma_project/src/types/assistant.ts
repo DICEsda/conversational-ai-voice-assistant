@@ -48,6 +48,7 @@ export interface Config {
   vad_max_duration: number;
   tts_enabled: boolean;
   tts_voice: string;
+  whisper_model_size: string;
 }
 
 export interface ConfigUpdate {
@@ -63,6 +64,7 @@ export interface ConfigUpdate {
   vad_max_duration?: number;
   tts_enabled?: boolean;
   tts_voice?: string;
+  whisper_model_size?: string;
 }
 
 export interface SystemMetrics {
@@ -118,4 +120,11 @@ export interface Message {
   role: 'user' | 'assistant';
   text: string;
   timestamp: string;
+}
+
+export interface ModelsResponse {
+  llm_models: string[];
+  current_llm_model: string;
+  whisper_sizes: string[];
+  current_whisper_size: string;
 }

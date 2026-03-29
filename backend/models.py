@@ -59,6 +59,7 @@ class Config(BaseModel):
     vad_max_duration: float = 15.0
     tts_enabled: bool = False
     tts_voice: str = "en-US-GuyNeural"
+    whisper_model_size: str = "base"
 
     class Config:
         json_schema_extra = {
@@ -76,7 +77,8 @@ class Config(BaseModel):
                 "vad_silence_duration": 1.5,
                 "vad_max_duration": 15.0,
                 "tts_enabled": False,
-                "tts_voice": "en-US-GuyNeural"
+                "tts_voice": "en-US-GuyNeural",
+                "whisper_model_size": "base"
             }
         }
 
@@ -95,6 +97,7 @@ class ConfigUpdate(BaseModel):
     vad_max_duration: Optional[float] = Field(None, ge=5.0, le=30.0)
     tts_enabled: Optional[bool] = None
     tts_voice: Optional[str] = None
+    whisper_model_size: Optional[str] = None
 
 
 class SystemMetrics(BaseModel):

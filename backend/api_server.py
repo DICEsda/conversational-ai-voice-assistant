@@ -2,10 +2,11 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Set
+from typing import Set, List
 import asyncio
 from datetime import datetime
 import json
+import requests as http_requests
 
 from backend.models import (
     AssistantStatus, AssistantState, Config, ConfigUpdate,
@@ -178,6 +179,28 @@ async def stop_assistant():
     return {"status": "stopped", "message": "Assistant stopped successfully"}
 
 
+@app.get("/api/models")
+async def get_available_models():
+    """Get available LLM models from LM Studio and Whisper model sizes"""
+    llm_models = []
+    try:
+        resp = http_requests.get(f"{config.LM_STUDIO_URL}/v1/models", timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            llm_models = [m["id"] for m in data.get("data", [])]
+    except Exception:
+        pass  # LM Studio not reachable
+
+    whisper_sizes = ["tiny", "base", "small", "medium", "large-v2"]
+
+    return {
+        "llm_models": llm_models,
+        "current_llm_model": config.MODEL_NAME,
+        "whisper_sizes": whisper_sizes,
+        "current_whisper_size": getattr(config, 'WHISPER_MODEL_SIZE', 'base'),
+    }
+
+
 @app.get("/api/config", response_model=Config)
 async def get_config():
     """Get current configuration"""
@@ -196,6 +219,7 @@ async def get_config():
         vad_max_duration=getattr(config, 'VAD_MAX_DURATION', 15.0),
         tts_enabled=getattr(config, 'TTS_ENABLED', False),
         tts_voice=getattr(config, 'TTS_VOICE', 'en-US-GuyNeural'),
+        whisper_model_size=getattr(config, 'WHISPER_MODEL_SIZE', 'base'),
     )
 
 
@@ -267,6 +291,10 @@ async def update_config(config_update: ConfigUpdate):
         if voice_assistant:
             voice_assistant.update_config(tts_voice=config_update.tts_voice)
         changes.append(f"tts_voice={config_update.tts_voice}")
+
+    if config_update.whisper_model_size is not None:
+        config.WHISPER_MODEL_SIZE = config_update.whisper_model_size
+        changes.append(f"whisper_model_size={config_update.whisper_model_size} (requires restart)")
 
     return {
         "status": "updated",

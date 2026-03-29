@@ -10,6 +10,7 @@ import type {
   MetricsData,
   MetricsHistory,
   HealthResponse,
+  ModelsResponse,
 } from '../types/assistant';
 
 class APIClient {
@@ -106,6 +107,13 @@ class APIClient {
    */
   async getMetricsHistory(): Promise<MetricsHistory> {
     return this.request<MetricsHistory>(API_ENDPOINTS.getMetricsHistory);
+  }
+
+  /**
+   * Get available LLM and Whisper models
+   */
+  async getModels(): Promise<ModelsResponse> {
+    return this.request<ModelsResponse>(API_ENDPOINTS.getModels);
   }
 }
 

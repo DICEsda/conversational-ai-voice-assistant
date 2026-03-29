@@ -14,5 +14,6 @@ export const API_ENDPOINTS = {
   updateConfig: '/api/config',
   getMetrics: '/api/metrics',
   getMetricsHistory: '/api/metrics/history',
+  getModels: '/api/models',
   events: '/api/events',
 };

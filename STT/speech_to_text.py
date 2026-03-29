@@ -8,17 +8,21 @@ from config import SAMPLE_RATE
 
 class SpeechToText:
     """Handles speech-to-text transcription using Whisper"""
-    
-    def __init__(self):
+
+    def __init__(self, model_size: str = None):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        from config import WHISPER_MODEL_SIZE
+        self.model_size = model_size or getattr(
+            __import__('config'), 'WHISPER_MODEL_SIZE', 'base'
+        )
         self._load_whisper()
-    
+
     def _load_whisper(self):
         """Load Whisper model"""
-        print("Loading Whisper...")
+        print(f"Loading Whisper ({self.model_size})...")
         compute_type = "float16" if self.device == "cuda" else "float32"
-        self.whisper = WhisperModel("base", device=self.device, compute_type=compute_type)
-        print("✅ Whisper loaded\n")
+        self.whisper = WhisperModel(self.model_size, device=self.device, compute_type=compute_type)
+        print(f"✅ Whisper ({self.model_size}) loaded\n")
     
     def transcribe(self, audio):
         """Transcribe audio to text"""
