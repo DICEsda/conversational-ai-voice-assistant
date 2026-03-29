@@ -115,6 +115,15 @@ export default function SplashScreen() {
       setStreamingText('');
     });
 
+    // TTS events
+    wsClient.on('tts_start', () => {
+      setStatusMessage('Speaking...');
+    });
+
+    wsClient.on('tts_complete', () => {
+      setStatusMessage('Done speaking');
+    });
+
     // Error events
     wsClient.on('error', (data: any) => {
       setStatusMessage(`Error: ${data.message}`);
@@ -194,6 +203,12 @@ export default function SplashScreen() {
           showCircle: false,
           centerText: streamingText || 'Responding...',
           animation: 'none'
+        };
+      case 'speaking':
+        return {
+          showCircle: true,
+          centerText: null,
+          animation: 'pulse'
         };
       default:
         return {

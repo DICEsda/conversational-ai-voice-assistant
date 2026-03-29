@@ -10,6 +10,7 @@ export type AssistantState =
   | 'transcribing'
   | 'thinking'
   | 'responding'
+  | 'speaking'
   | 'error';
 
 export type EventType =
@@ -20,6 +21,8 @@ export type EventType =
   | 'transcription'
   | 'llm_token'
   | 'llm_complete'
+  | 'tts_start'
+  | 'tts_complete'
   | 'error'
   | 'metrics';
 
@@ -40,6 +43,11 @@ export interface Config {
   sample_rate: number;
   record_seconds: number;
   enable_streaming: boolean;
+  vad_enabled: boolean;
+  vad_silence_duration: number;
+  vad_max_duration: number;
+  tts_enabled: boolean;
+  tts_voice: string;
 }
 
 export interface ConfigUpdate {
@@ -50,6 +58,11 @@ export interface ConfigUpdate {
   temperature?: number;
   record_seconds?: number;
   enable_streaming?: boolean;
+  vad_enabled?: boolean;
+  vad_silence_duration?: number;
+  vad_max_duration?: number;
+  tts_enabled?: boolean;
+  tts_voice?: string;
 }
 
 export interface SystemMetrics {

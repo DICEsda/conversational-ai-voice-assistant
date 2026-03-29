@@ -141,6 +141,7 @@ async def get_status():
         AssistantState.TRANSCRIBING: "Transcribing speech...",
         AssistantState.THINKING: "Thinking...",
         AssistantState.RESPONDING: "Generating response...",
+        AssistantState.SPEAKING: "Speaking...",
         AssistantState.ERROR: "Error occurred"
     }
     
@@ -189,7 +190,12 @@ async def get_config():
         hotword_name=config.KEYWORD_NAME,
         sample_rate=config.SAMPLE_RATE,
         record_seconds=config.RECORD_SECONDS,
-        enable_streaming=getattr(config, 'ENABLE_STREAMING', True)
+        enable_streaming=getattr(config, 'ENABLE_STREAMING', True),
+        vad_enabled=getattr(config, 'VAD_ENABLED', True),
+        vad_silence_duration=getattr(config, 'VAD_SILENCE_DURATION', 1.5),
+        vad_max_duration=getattr(config, 'VAD_MAX_DURATION', 15.0),
+        tts_enabled=getattr(config, 'TTS_ENABLED', False),
+        tts_voice=getattr(config, 'TTS_VOICE', 'en-US-GuyNeural'),
     )
 
 
@@ -231,7 +237,37 @@ async def update_config(config_update: ConfigUpdate):
         if hasattr(config, 'ENABLE_STREAMING'):
             config.ENABLE_STREAMING = config_update.enable_streaming
         changes.append("enable_streaming")
-    
+
+    if config_update.vad_enabled is not None:
+        config.VAD_ENABLED = config_update.vad_enabled
+        if voice_assistant:
+            voice_assistant.update_config(vad_enabled=config_update.vad_enabled)
+        changes.append(f"vad_enabled={config_update.vad_enabled}")
+
+    if config_update.vad_silence_duration is not None:
+        config.VAD_SILENCE_DURATION = config_update.vad_silence_duration
+        if voice_assistant:
+            voice_assistant.update_config(vad_silence_duration=config_update.vad_silence_duration)
+        changes.append(f"vad_silence_duration={config_update.vad_silence_duration}")
+
+    if config_update.vad_max_duration is not None:
+        config.VAD_MAX_DURATION = config_update.vad_max_duration
+        if voice_assistant:
+            voice_assistant.update_config(vad_max_duration=config_update.vad_max_duration)
+        changes.append(f"vad_max_duration={config_update.vad_max_duration}")
+
+    if config_update.tts_enabled is not None:
+        config.TTS_ENABLED = config_update.tts_enabled
+        if voice_assistant:
+            voice_assistant.update_config(tts_enabled=config_update.tts_enabled)
+        changes.append(f"tts_enabled={config_update.tts_enabled}")
+
+    if config_update.tts_voice is not None:
+        config.TTS_VOICE = config_update.tts_voice
+        if voice_assistant:
+            voice_assistant.update_config(tts_voice=config_update.tts_voice)
+        changes.append(f"tts_voice={config_update.tts_voice}")
+
     return {
         "status": "updated",
         "changes": changes,

@@ -10,6 +10,7 @@ from STT.hotword_detector import HotwordDetector
 from STT.speech_to_text import SpeechToText
 from LMStudio_LLMClient.llm_client import LLMClient
 from STT.audio_recorder import AudioRecorder
+from TTS.tts_engine import TTSEngine
 from backend.models import AssistantState, EventType
 from backend.metrics_collector import MetricsCollector
 from config import KEYWORD_NAME
@@ -44,6 +45,7 @@ class VoiceAssistantService:
         self.stt: Optional[SpeechToText] = None
         self.llm: Optional[LLMClient] = None
         self.recorder = AudioRecorder()
+        self.tts: Optional[TTSEngine] = None
         
         # Message queue for last exchange
         self.last_user_query: Optional[str] = None
@@ -52,6 +54,7 @@ class VoiceAssistantService:
         # Dynamic config (can be updated via API)
         self.temperature: Optional[float] = None
         self.max_tokens: Optional[int] = None
+        self.tts_enabled: bool = getattr(__import__('config'), 'TTS_ENABLED', False)
     
     def _emit_event(self, event_type: EventType, data: Optional[dict] = None):
         """Emit an event to the callback (WebSocket)"""
@@ -104,23 +107,44 @@ class VoiceAssistantService:
                 self.hotword.cleanup()
             except Exception:
                 pass
+        if self.tts:
+            try:
+                self.tts.cleanup()
+            except Exception:
+                pass
     
     def _initialize_components(self):
         """Initialize voice assistant components (done in thread)"""
+        import config as cfg
         try:
             self._set_state(AssistantState.IDLE, "Initializing components...")
-            
+
             # Initialize hotword detector
             self.hotword = HotwordDetector()
-            
+
             # Initialize speech-to-text
             self.stt = SpeechToText()
-            
+
             # Initialize LLM client
             self.llm = LLMClient()
-            
+
+            # Configure VAD on recorder
+            self.recorder.update_vad_config(
+                vad_enabled=getattr(cfg, 'VAD_ENABLED', True),
+                silence_duration=getattr(cfg, 'VAD_SILENCE_DURATION', 1.5),
+                max_duration=getattr(cfg, 'VAD_MAX_DURATION', 15.0),
+            )
+
+            # Initialize TTS engine
+            if getattr(cfg, 'TTS_ENABLED', False):
+                self.tts = TTSEngine(
+                    voice=getattr(cfg, 'TTS_VOICE', 'en-US-GuyNeural')
+                )
+                if not self.tts.available:
+                    self.tts = None
+
             self._set_state(AssistantState.IDLE, f"Ready! Listening for '{KEYWORD_NAME}'...")
-            
+
         except Exception as e:
             self._set_state(AssistantState.ERROR, f"Initialization failed: {e}")
             self._running = False
@@ -252,7 +276,19 @@ class VoiceAssistantService:
                     "time_ms": llm_total_time,
                     "tokens_per_second": tokens_per_second
                 })
-                
+
+                # Phase 5: Text-to-Speech (if enabled)
+                if self.tts_enabled and self.tts and self.tts.available and full_response:
+                    self._set_state(AssistantState.SPEAKING, "Speaking...")
+                    self._emit_event(EventType.TTS_START, {"text": full_response})
+                    try:
+                        self.tts.speak(full_response)
+                    except Exception as e:
+                        self._emit_event(EventType.ERROR, {
+                            "message": f"TTS error: {str(e)}"
+                        })
+                    self._emit_event(EventType.TTS_COMPLETE)
+
                 # Finish timing
                 self.metrics.finish_timing()
                 
@@ -271,9 +307,27 @@ class VoiceAssistantService:
         # Cleanup on exit
         self._set_state(AssistantState.IDLE, "Assistant stopped")
     
-    def update_config(self, temperature: Optional[float] = None, max_tokens: Optional[int] = None):
-        """Update LLM configuration on the fly"""
+    def update_config(self, temperature: Optional[float] = None, max_tokens: Optional[int] = None,
+                      vad_enabled: Optional[bool] = None, vad_silence_duration: Optional[float] = None,
+                      vad_max_duration: Optional[float] = None,
+                      tts_enabled: Optional[bool] = None, tts_voice: Optional[str] = None):
+        """Update configuration on the fly"""
         if temperature is not None:
             self.temperature = temperature
         if max_tokens is not None:
             self.max_tokens = max_tokens
+        # VAD config
+        self.recorder.update_vad_config(
+            vad_enabled=vad_enabled,
+            silence_duration=vad_silence_duration,
+            max_duration=vad_max_duration,
+        )
+        # TTS config
+        if tts_enabled is not None:
+            self.tts_enabled = tts_enabled
+            if tts_enabled and self.tts is None:
+                self.tts = TTSEngine(voice=tts_voice or 'en-US-GuyNeural')
+                if not self.tts.available:
+                    self.tts = None
+        if tts_voice is not None and self.tts:
+            self.tts.update_config(voice=tts_voice)

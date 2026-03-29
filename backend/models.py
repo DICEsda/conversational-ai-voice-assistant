@@ -13,6 +13,7 @@ class AssistantState(str, Enum):
     TRANSCRIBING = "transcribing"
     THINKING = "thinking"
     RESPONDING = "responding"
+    SPEAKING = "speaking"
     ERROR = "error"
 
 
@@ -25,6 +26,8 @@ class EventType(str, Enum):
     TRANSCRIPTION = "transcription"
     LLM_TOKEN = "llm_token"
     LLM_COMPLETE = "llm_complete"
+    TTS_START = "tts_start"
+    TTS_COMPLETE = "tts_complete"
     ERROR = "error"
     METRICS = "metrics"
 
@@ -51,7 +54,12 @@ class Config(BaseModel):
     sample_rate: int
     record_seconds: int
     enable_streaming: bool = True
-    
+    vad_enabled: bool = True
+    vad_silence_duration: float = 1.5
+    vad_max_duration: float = 15.0
+    tts_enabled: bool = False
+    tts_voice: str = "en-US-GuyNeural"
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -63,7 +71,12 @@ class Config(BaseModel):
                 "hotword_name": "Hey Dice",
                 "sample_rate": 16000,
                 "record_seconds": 5,
-                "enable_streaming": True
+                "enable_streaming": True,
+                "vad_enabled": True,
+                "vad_silence_duration": 1.5,
+                "vad_max_duration": 15.0,
+                "tts_enabled": False,
+                "tts_voice": "en-US-GuyNeural"
             }
         }
 
@@ -77,6 +90,11 @@ class ConfigUpdate(BaseModel):
     temperature: Optional[float] = Field(None, ge=0.0, le=2.0)
     record_seconds: Optional[int] = None
     enable_streaming: Optional[bool] = None
+    vad_enabled: Optional[bool] = None
+    vad_silence_duration: Optional[float] = Field(None, ge=0.5, le=5.0)
+    vad_max_duration: Optional[float] = Field(None, ge=5.0, le=30.0)
+    tts_enabled: Optional[bool] = None
+    tts_voice: Optional[str] = None
 
 
 class SystemMetrics(BaseModel):

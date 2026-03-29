@@ -28,3 +28,12 @@ TEMPERATURE = 0.7
 API_HOST = "127.0.0.1"
 API_PORT = 8000
 ENABLE_STREAMING = True
+
+# VAD Settings
+VAD_ENABLED = True
+VAD_SILENCE_DURATION = 1.5  # Seconds of silence before stopping
+VAD_MAX_DURATION = 15.0     # Max recording length in seconds
+
+# TTS Settings
+TTS_ENABLED = False
+TTS_VOICE = "en-US-GuyNeural"
