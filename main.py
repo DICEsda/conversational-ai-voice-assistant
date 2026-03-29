@@ -23,7 +23,7 @@ class VoiceAssistant:
     def _print_startup_info(self):
         """Print system information"""
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        print(f"🖥️ Device: {device}")
+        print(f"\U0001f5a5\ufe0f Device: {device}")
         if device == "cuda":
             print(f"🎮 GPU: {torch.cuda.get_device_name(0)}")
             print(f"💾 VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB\n")
@@ -74,7 +74,7 @@ class VoiceAssistant:
                     print(f"❌ {reply}\n\n")
         
         except KeyboardInterrupt:
-            print("\n�� Goodbye!")
+            print("\n👋 Goodbye!")
         finally:
             self.hotword.cleanup()
 

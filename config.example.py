@@ -23,3 +23,8 @@ KEYWORD_NAME = "Hey Dice"
 SYSTEM_PROMPT = "You are a helpful voice assistant. Keep responses brief and conversational."
 MAX_TOKENS = 150
 TEMPERATURE = 0.7
+
+# API Settings
+API_HOST = "127.0.0.1"
+API_PORT = 8000
+ENABLE_STREAMING = True

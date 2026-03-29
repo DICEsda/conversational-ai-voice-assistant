@@ -45,3 +45,21 @@ temp/
 build/
 dist/
 *.egg-info/
+
+# Node
+node_modules/
+package-lock.json
+
+# Frontend build + deps
+figma_project/node_modules/
+figma_project/dist/
+
+# Cloned third-party repos
+temp_kokoro/
+
+# Archives & artifacts
+*.zip
+nul
+
+# Claude
+.claude/
