@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, dialog } = require('electron');
 const path = require('path');
 const BackendManager = require('./backend-manager');
 
@@ -30,7 +30,7 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
-    icon: path.join(__dirname, 'icon.ico'),
+    icon: path.join(__dirname, 'icon.png'),
     show: false, // Don't show until ready
   });
 
@@ -68,7 +68,7 @@ function createWindow() {
  */
 function createTray() {
   // Create tray icon (you'll need to add a proper icon file)
-  const iconPath = path.join(__dirname, 'tray-icon.png');
+  const iconPath = path.join(__dirname, 'tray-icon-new.png');
   let trayIcon;
   
   try {
@@ -196,7 +196,19 @@ async function handleStartBackend() {
     console.log('Starting backend...');
     const result = await backendManager.start();
     console.log('Backend start result:', result);
-    
+
+    if (result.status === 'error') {
+      dialog.showErrorBox('Backend Error', result.message);
+      if (mainWindow) {
+        mainWindow.webContents.send('backend-status', {
+          isRunning: false,
+          ...result,
+        });
+      }
+      updateTrayMenu();
+      return result;
+    }
+
     // Notify renderer
     if (mainWindow) {
       mainWindow.webContents.send('backend-status', {
@@ -204,11 +216,12 @@ async function handleStartBackend() {
         ...result,
       });
     }
-    
+
     updateTrayMenu();
     return result;
   } catch (error) {
     console.error('Error starting backend:', error);
+    dialog.showErrorBox('Backend Error', error.message || 'Unknown error starting backend');
     return { status: 'error', message: error.message };
   }
 }

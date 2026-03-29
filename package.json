@@ -34,9 +34,12 @@
       { "from": "requirements.txt", "to": "requirements.txt" }
     ],
     "win": {
-      "target": ["nsis"],
-      "icon": "electron/tray-icon.png"
-    }
+      "target": ["portable"],
+      "icon": "electron/icon.png",
+      "signAndEditExecutable": false,
+      "sign": false
+    },
+    "forceCodeSigning": false
   },
   "devDependencies": {
     "@stoplight/spectral-cli": "^6.11.1",

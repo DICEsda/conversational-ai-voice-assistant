@@ -44,6 +44,7 @@ temp/
 # Build
 build/
 dist/
+dist-electron/
 *.egg-info/
 
 # Node
